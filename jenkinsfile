@@ -7,15 +7,15 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/yourusername/my-python-app.git'
+                git branch: 'main', url: 'https://github.com/DarkShadow0101/my-python-app.git'
             }
         }
 
         stage('Setup Python Environment') {
             steps {
-                sh '''
+                bat '''
                 python -m venv venv
-                source venv/bin/activate
+                call venv\\Scripts\\activate
                 pip install -r requirements.txt
                 '''
             }
@@ -23,8 +23,8 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
-                source venv/bin/activate
+                bat '''
+                call venv\\Scripts\\activate
                 pytest tests/
                 '''
             }
@@ -33,9 +33,9 @@ pipeline {
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    source venv/bin/activate
-                    sonar-scanner -Dsonar.login=$SONAR_TOKEN
+                    bat '''
+                    call venv\\Scripts\\activate
+                    sonar-scanner -Dsonar.login=%SONAR_TOKEN%
                     '''
                 }
             }
@@ -44,28 +44,28 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    bat "docker build -t %DOCKER_IMAGE% ."
                 }
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh "trivy image ${DOCKER_IMAGE}"
+                bat "trivy image %DOCKER_IMAGE%"
             }
         }
 
         stage('Docker Scout Scan') {
             steps {
-                sh "docker scout analyze ${DOCKER_IMAGE}"
+                bat "docker scout analyze %DOCKER_IMAGE%"
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
+                bat '''
+                kubectl apply -f k8s\\deployment.yaml
+                kubectl apply -f k8s\\service.yaml
                 '''
             }
         }
